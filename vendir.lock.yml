@@ -1,0 +1,13 @@
+apiVersion: vendir.k14s.io/v1alpha1
+directories:
+- contents:
+  - githubRelease:
+      tag: v2.3.0
+      url: https://api.github.com/repos/todbot/blink1-tool/releases/58055470
+    path: linux-arm64
+  - githubRelease:
+      tag: v2.3.0
+      url: https://api.github.com/repos/todbot/blink1-tool/releases/58055470
+    path: linux-amd64
+  path: vendor
+kind: LockConfig

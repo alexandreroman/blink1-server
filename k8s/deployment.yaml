@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blink1-server
+  namespace: blink1-server
+spec:
+  selector:
+    matchLabels: &labels
+      app: blink1-server
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      containers:
+      - name: app
+        image: ghcr.io/alexandreroman/blink1-server
+        resources:
+          limits:
+            memory: 32Mi
+            cpu: 100m
+          requests:
+            memory: 32Mi
+            cpu: 100m
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8080
+            scheme: HTTP
+        livenessProbe:
+          httpGet:
+            path: /livez
+            port: 8080
+            scheme: HTTP
+        securityContext:
+          privileged: true
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - mountPath: /dev/ttyACM0
+          name: usb
+      volumes:
+      - name: usb
+        hostPath:
+          path: /dev/ttyACM0

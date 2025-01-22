@@ -1,0 +1,80 @@
+name: Build and deploy
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+env:
+  image: ghcr.io/alexandreroman/blink1-server
+
+jobs:
+  build-image:
+    strategy:
+      matrix:
+        os:
+        - ubuntu-24.04
+        - ubuntu-24.04-arm
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: buildpacks/github-actions/setup-pack@v5.8.8
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Log in to the container registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build image
+      run: |
+        make IMAGE=${{ env.image }}
+    - name: Deploy image
+      run: |
+        CNB_TAG="linux-`dpkg --print-architecture`"
+        CNB_IMAGE=${{ env.image }}
+        docker tag $CNB_IMAGE:latest $CNB_IMAGE:$CNB_TAG
+        docker push $CNB_IMAGE:$CNB_TAG
+
+  package-image:
+    needs:
+    - build-image
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Log in to the container registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Package multi-arch image
+      run: |
+        CNB_IMAGE=${{ env.image }}
+        docker manifest create $CNB_IMAGE:latest --amend $CNB_IMAGE:linux-arm64 --amend $CNB_IMAGE:linux-amd64
+        docker manifest push $CNB_IMAGE:latest
+
+  trigger-gitops:
+    needs:
+    - package-image
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ secrets.GITOPS_TOKEN }}
+      TARGET_OWNER: alexandreroman
+      TARGET_REPO: rpilab
+      TARGET_WORKFLOW: gitops.yaml
+    steps:
+    - name: trigger-gitops
+      run: |
+        curl -L -X POST -H "Accept: application/vnd.github+json" \
+          -H "Authorization: token $GH_TOKEN" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/$TARGET_OWNER/$TARGET_REPO/actions/workflows/$TARGET_WORKFLOW/dispatches \
+          -d '{"ref":"main"}'
