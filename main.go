@@ -80,19 +80,23 @@ func blink(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	times := 5
-	timesStr := req.URL.Query().Get("times")
-	if timesStr != "" {
-		newTimes, err := strconv.Atoi(timesStr)
+	repeat := 5
+	repeatStr := req.URL.Query().Get("repeat")
+	if repeatStr != "" {
+		var err error
+		repeat, err = strconv.Atoi(repeatStr)
 		if err != nil {
-			http.Error(w, "Invalid parameter: times", http.StatusBadRequest)
+			http.Error(w, "Invalid parameter: repeat", http.StatusBadRequest)
 			return
 		}
-		times = newTimes
+	}
+	if repeat < 1 {
+		http.Error(w, fmt.Sprintf("Invalid value for parameter repeat: %d", repeat), http.StatusBadRequest)
+		return
 	}
 
-	log.Printf("Blinking color %s %d times", color, times)
-	if err := runBlink1Tool("--rgb", color, "--blink", strconv.Itoa(times)); err != nil {
+	log.Printf("Blinking color %s %d times", color, repeat)
+	if err := runBlink1Tool("--rgb", color, "--blink", strconv.Itoa(repeat)); err != nil {
 		msg := fmt.Sprintf("Failed to blink color %s", color)
 		http.Error(w, msg, http.StatusInternalServerError)
 		return
