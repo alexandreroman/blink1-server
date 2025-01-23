@@ -14,7 +14,7 @@ import (
 )
 
 func readinessProbe(w http.ResponseWriter, req *http.Request) {
-	if err := runBlink1Tool("--rgbread"); err != nil {
+	if err := _runBlink1Tool(false, "--rgbread"); err != nil {
 		http.Error(w, "NOT_READY", http.StatusServiceUnavailable)
 		return
 	}
@@ -105,6 +105,10 @@ func blink(w http.ResponseWriter, req *http.Request) {
 }
 
 func runBlink1Tool(params ...string) error {
+	return _runBlink1Tool(true, params...)
+}
+
+func _runBlink1Tool(debug bool, params ...string) error {
 	cli := "blink1-tool"
 
 	currentDir, err := os.Getwd()
@@ -114,18 +118,22 @@ func runBlink1Tool(params ...string) error {
 	}
 
 	exe := filepath.Join(currentDir, "vendor", fmt.Sprintf("linux-%s", runtime.GOARCH), cli)
-	log.Printf("Running CLI: %s %s", cli, strings.Join(params, " "))
+	if debug {
+		log.Printf("Running CLI: %s %s", cli, strings.Join(params, " "))
+	}
 	cmd := exec.Command(exe, params[0:]...)
 
 	if err := cmd.Start(); err != nil {
-		log.Printf("Failed to start %s: %s", cli, err)
+		log.Fatalf("Failed to start %s: %s", cli, err)
 		return err
 	}
 
 	if err := cmd.Wait(); err != nil {
 		if exiterr, ok := err.(*exec.ExitError); ok {
 			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
-				log.Printf("Failed to execute %s: exit code=%d", cli, status.ExitStatus())
+				if debug {
+					log.Printf("Failed to execute %s: exit code=%d", cli, status.ExitStatus())
+				}
 				return err
 			}
 		}
