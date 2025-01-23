@@ -127,7 +127,7 @@ func main() {
 		}
 	}
 
-	http.HandleFunc("/turnoff", turnOff)
+	http.HandleFunc("/off", turnOff)
 	http.HandleFunc("/set", setColor)
 	http.HandleFunc("/blink", blink)
 	http.HandleFunc("/readyz", readinessProbe)
