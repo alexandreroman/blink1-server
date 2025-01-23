@@ -13,17 +13,15 @@ import (
 	"syscall"
 )
 
-var alive = true
-
 func readinessProbe(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "UP")
+	if err := runBlink1Tool("--rgbread"); err != nil {
+		http.Error(w, "NOT_READY", http.StatusServiceUnavailable)
+		return
+	}
+	fmt.Fprintf(w, "READY")
 }
 
 func livenessProbe(w http.ResponseWriter, req *http.Request) {
-	if !alive {
-		http.Error(w, "DOWN", http.StatusServiceUnavailable)
-		return
-	}
 	fmt.Fprintf(w, "UP")
 }
 
@@ -38,7 +36,6 @@ func setColor(w http.ResponseWriter, req *http.Request) {
 	if err := runBlink1Tool("--rgb", color); err != nil {
 		msg := fmt.Sprintf("Failed to set color %s", color)
 		http.Error(w, msg, http.StatusInternalServerError)
-		alive = false
 		return
 	}
 	fmt.Fprintf(w, "OK")
@@ -48,7 +45,6 @@ func turnOff(w http.ResponseWriter, req *http.Request) {
 	log.Printf("Turning off LED")
 	if err := runBlink1Tool("--off"); err != nil {
 		http.Error(w, "Failed to turn off LED", http.StatusInternalServerError)
-		alive = false
 		return
 	}
 	fmt.Fprintf(w, "OK")
@@ -76,7 +72,6 @@ func blink(w http.ResponseWriter, req *http.Request) {
 	if err := runBlink1Tool("--rgb", color, "--blink", strconv.Itoa(times)); err != nil {
 		msg := fmt.Sprintf("Failed to blink color %s", color)
 		http.Error(w, msg, http.StatusInternalServerError)
-		alive = false
 		return
 	}
 	fmt.Fprintf(w, "OK")
@@ -87,7 +82,7 @@ func runBlink1Tool(params ...string) error {
 
 	currentDir, err := os.Getwd()
 	if err != nil {
-		log.Fatalf("Failed to get current dir:", err)
+		log.Fatalf("Failed to get current dir")
 		return err
 	}
 
@@ -122,7 +117,7 @@ func main() {
 		var err error
 		port, err = strconv.Atoi(portString)
 		if err != nil {
-			log.Fatalf("Failed to parse env variable PORT:", err)
+			log.Fatalf("Failed to parse env variable PORT: %s", portString)
 			return
 		}
 	}
