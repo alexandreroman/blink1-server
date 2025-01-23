@@ -24,7 +24,6 @@ jobs:
         - ubuntu-24.04-arm
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: buildpacks/github-actions/setup-pack@v5.8.8
     - uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
