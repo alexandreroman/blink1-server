@@ -32,11 +32,34 @@ func setColor(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	log.Printf("Setting color %s", color)
-	if err := runBlink1Tool("--rgb", color); err != nil {
-		msg := fmt.Sprintf("Failed to set color %s", color)
-		http.Error(w, msg, http.StatusInternalServerError)
+	delay := 0
+	delayStr := req.URL.Query().Get("delay")
+	if delayStr != "" {
+		var err error
+		delay, err = strconv.Atoi(delayStr)
+		if err != nil {
+			http.Error(w, "Invalid parameter: delay", http.StatusBadRequest)
+			return
+		}
+	}
+	if delay < 0 {
+		http.Error(w, fmt.Sprintf("Invalid value for parameter delay: %d", delay), http.StatusBadRequest)
 		return
+	}
+
+	log.Printf("Setting color %s with delay of %d second(s)", color, delay)
+	if delay == 0 {
+		if err := runBlink1Tool("--rgb", color); err != nil {
+			msg := fmt.Sprintf("Failed to set color %s", color)
+			http.Error(w, msg, http.StatusInternalServerError)
+			return
+		}
+	} else {
+		if err := runBlink1Tool("--playpattern", fmt.Sprintf("1,%s,%d,0,#000000,0.1,0", color, delay)); err != nil {
+			msg := fmt.Sprintf("Failed to set color %s with delay %d", color, delay)
+			http.Error(w, msg, http.StatusInternalServerError)
+			return
+		}
 	}
 	fmt.Fprintf(w, "OK")
 }
