@@ -38,10 +38,10 @@ jobs:
         make IMAGE=${{ env.image }}
     - name: Deploy image
       run: |
-        CNB_TAG="linux-`dpkg --print-architecture`"
-        CNB_IMAGE=${{ env.image }}
-        docker tag $CNB_IMAGE:latest $CNB_IMAGE:$CNB_TAG
-        docker push $CNB_IMAGE:$CNB_TAG
+        TAG="linux-`dpkg --print-architecture`"
+        IMAGE=${{ env.image }}
+        docker tag $IMAGE:latest $IMAGE:$TAG
+        docker push $IMAGE:$TAG
 
   package-image:
     needs:
@@ -56,9 +56,9 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Package multi-arch image
       run: |
-        CNB_IMAGE=${{ env.image }}
-        docker manifest create $CNB_IMAGE:latest --amend $CNB_IMAGE:linux-arm64 --amend $CNB_IMAGE:linux-amd64
-        docker manifest push $CNB_IMAGE:latest
+        IMAGE=${{ env.image }}
+        docker manifest create $IMAGE:latest --amend $IMAGE:linux-arm64 --amend $IMAGE:linux-amd64
+        docker manifest push $IMAGE:latest
 
   trigger-gitops:
     needs:
