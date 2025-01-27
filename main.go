@@ -104,6 +104,10 @@ func blink(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "OK")
 }
 
+func onStart() {
+	_runBlink1Tool(false, "--rgb", "0000FF", "--blink", "5")
+}
+
 func runBlink1Tool(params ...string) error {
 	return _runBlink1Tool(true, params...)
 }
@@ -156,6 +160,8 @@ func main() {
 			return
 		}
 	}
+
+	onStart()
 
 	http.HandleFunc("/off", turnOff)
 	http.HandleFunc("/set", setColor)
