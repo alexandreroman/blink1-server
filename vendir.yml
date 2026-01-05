@@ -6,18 +6,18 @@ directories:
   - path: linux-arm64
     githubRelease:
       slug: todbot/blink1-tool
-      tag: v2.3.0
+      tag: v2.4.0
       disableAutoChecksumValidation: true
       assetNames:
       - blink1-tool-*-linux-aarch64.zip
       unpackArchive:
-        path: blink1-tool-v2.3.0-linux-aarch64.zip
+        path: blink1-tool-v2.4.0-linux-aarch64.zip
   - path: linux-amd64
     githubRelease:
       slug: todbot/blink1-tool
-      tag: v2.3.0
+      tag: v2.4.0
       disableAutoChecksumValidation: true
       assetNames:
       - blink1-tool-*-linux-x86_64.zip
       unpackArchive:
-        path: blink1-tool-v2.3.0-linux-x86_64.zip
+        path: blink1-tool-v2.4.0-linux-x86_64.zip
